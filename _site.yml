@@ -1,0 +1,10 @@
+name: "my-website"
+navbar:
+  title: "CE Events"
+  left:
+    - text: "Daybyday"
+      href: index.html
+    - text: "Rooming"
+      href: about.html
+   
+   

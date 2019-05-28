@@ -1,0 +1,18 @@
+---
+title: ""
+author: ""
+date: ''
+output:
+ 
+  html_document:
+    css: FORMATO1.css
+    fig_width: 8
+    fig_height: 8
+    highlight: textmate
+    theme: cosmo
+    
+
+---
+
+
+

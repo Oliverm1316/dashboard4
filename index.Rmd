@@ -1,0 +1,409 @@
+---
+title: "Coca-cola Group, Barcelona Fri 28 - Sun 30 June 2019"
+output: 
+  flexdashboard::flex_dashboard:
+    logo: logo.png
+    theme: sandstone
+---
+
+DaybyDay {.storyboard}
+===================================== 
+
+### _**Day 1- Friday, June 28th - 2019**_ {data-commentary-width=150}
+
+
+<br><br>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+library(dplyr)
+library(knitr)
+library(kableExtra)
+library(plotly)
+library(formattable)
+library(readxl)
+
+program <- read_excel("program.xlsx", sheet = "day1")
+program$finish[is.na(program$finish)] <- ""
+program$notes[is.na(program$notes)] <- ""
+program$notes[is.na(program$notes)] <- ""
+
+table_style <- function(x){
+  x %>% kable(format = "html", escape = F) %>% kable_styling(fixed_thead = T,bootstrap_options = c("striped","condensed","hover","responsive")) %>%
+row_spec(0, bold = T, color = "white", background = "black") 
+}
+
+program %>% select(1:6) %>% 
+  mutate(
+  owner = cell_spec(owner,
+  "html", color = ifelse(owner == "CUTTING","#ee7600", "blue"))) %>% table_style()
+
+
+```
+
+*** 
+
+click activity for menu information
+click owner for phone contacts
+
+
+### Day 2- Saturday, June 29th - 2019 {data-commentary-width=200}
+
+```{r}
+
+```
+
+*** 
+
+comments
+
+Accommodation 
+===================================== 
+
+_**Rooming List**_ 
+--------------------------------------
+
+### Hotel Palas
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+library(DT)
+library(readxl)
+library(lubridate)
+library(dplyr)
+library(chron)
+
+rooming <- read_excel("rooming.xlsx", sheet = "rooming", 
+           col_types = c("text", "text", "text", "date", "date","text","text","text"))
+
+rooming <- rooming %>% arrange(last)
+rooming$chkin <- ymd(rooming$chkin)
+rooming$chkout <- ymd(rooming$chkout)
+rooming$room_type <- factor(rooming$room_type)
+
+trnsfin <- read_excel("rooming.xlsx", sheet = "trnsfin",
+           col_types = c("text","text","text","date","date","text"))
+
+trnsfin$arr_time <- times(format(trnsfin$arr_time,"%H:%M:%S"))
+trnsfin$trnsf_in <- as.Date(trnsfin$trnsf_in) %>% format("%Y-%m-%d")
+
+trnsfout <- read_excel("rooming.xlsx", sheet = "trnsfout",
+           col_types = c("text","text","text","date","date","text","date","text"))
+
+trnsfout$trnsfout_time <- times(format(trnsfout$trnsfout_time,"%H:%M:%S"))
+trnsfout$pick_up <- times(format(trnsfout$pick_up,"%H:%M:%S"))
+trnsfout$trnsf_out <- as.Date(trnsfout$trnsf_out) %>% format("%Y-%m-%d")
+
+
+total <- merge(rooming,trnsfin, by = c("first","last","country"), all = TRUE)
+total_in_out <- merge(total,trnsfout, by = c("first","last","country"),
+                      all = TRUE)
+
+total_in_out_table <- total_in_out %>% arrange(last) %>% 
+  select(first,last,room_type,chkin,trnsf_in,chkout,trnsf_out)
+
+total_in_out_table$colors <- with(total_in_out_table, 
+  ifelse(trnsf_in >= chkin,"lightgreen","red"))
+
+datatable(total_in_out_table,
+          options = list(pageLength = 100,
+            columnDefs = list(
+              list(
+                visible = FALSE, targets = 8)))) %>% 
+              formatStyle(c("trnsf_in","chkin"), `text-align` = 'center', valueColumns = "colors", backgroundColor = JS("value"))
+
+
+```
+
+
+Rooming List charts 
+===================================== 
+
+_**Rooming chart**_ {data-width=334}
+----------------------------------------
+
+### 1st 
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+library(ggplot2)
+
+rows1 <- round(nrow(rooming)/3, digits = 0)
+rooming1 <- rooming[1:rows1,]
+
+rooming_chart <- function(x){
+  x %>% ggplot() + geom_segment(aes(x = factor(last, levels = rev(levels(factor(last)))), 
+  xend = factor(last, levels = rev(levels(factor(last)))),
+  y = chkin, yend = chkout ),
+  color = "grey") + 
+geom_point( aes(x=last, y=chkin, first = first, allergies=allergies, room_type=room_type), color = rgb(0.2,0.7,0.1,0.5), size=3 )+
+geom_point(aes(x=last, y=chkout, first = first, remarks = remarks), color=rgb(0.7,0.2,0.1,0.5), size=3 )+         
+ coord_flip() +
+ theme_light() +
+ theme(legend.position = "none",
+ panel.border = element_blank())+ xlab("")+ ylab("check in/out")
+  }
+
+ggplotly(rooming_chart(rooming1), tooltip = c("first", "room_type","allergies", "remarks"))
+ 
+```
+
+
+_**Rooming chart**_ {data-width=333}
+----------------------------------------
+
+### 2nd 
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+
+rows2 <- round(nrow(rooming)*2/3, digits = 0)
+rooming2 <- rooming[(rows1+1):rows2,]
+
+ggplotly(rooming_chart(rooming2), tooltip = c("first","room_type","allergies","remarks"))
+ 
+```
+
+
+_**Rooming chart**_ {data-width=333}
+----------------------------------------
+
+### 3rd 
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+library(ggplot2)
+
+rows3 <- nrow(rooming)
+rooming3 <- rooming[(rows2+1):rows3,]
+
+ggplotly(rooming_chart(rooming3), tooltip = c("first","room_type","allergies","remarks"))
+ 
+```
+
+
+Budget {data-navmenu="financials"}
+===================================== 
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+tables <- function(x){
+
+x %>% select(1:5) %>% mutate(total = paste("EUR", format(round(total, 2L),nsmall = 2,big.mark = ","))) %>% 
+  kable(
+   format = "html", escape = F) %>% kable_styling(fixed_thead =   T,bootstrap_options = c("striped","condensed","hover","responsive")) %>%
+row_spec(0, bold = T, color = "white", background = "black")  %>% 
+  column_spec(1, width = "8em") %>% 
+  column_spec(5,bold = TRUE, width = "8em")}
+```
+
+
+_**Coca-cola group**_ {data-width=850}
+-------------------------------------------
+
+### Budget as of May 25, 2019
+
+<br><br>
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+library(DT)
+library(readxl)
+library(lubridate)
+library(dplyr)
+library(chron)
+library(kableExtra)
+library(scales)
+library(tidyverse)
+
+budget <- read_excel("rooming.xlsx", sheet = "bud") 
+budget <- sapply(budget, as.character)
+budget[is.na(budget)] <- ""
+budget <- data.frame(budget, stringsAsFactors = FALSE)
+class(budget$bud_units) <- "numeric"
+class(budget$bud_cost) <- "numeric"
+class(budget$bud_total) <- "numeric"
+
+names(budget) <- c("date","description","units","unit cost","total","category")
+
+
+budget[nrow(budget),] <- c("","","<strong>Total</strong>","",sum(budget$total),"")
+
+class(budget$total) <- "numeric"
+
+tables(budget)
+
+```
+
+_**Coca-cola group**_{data-width=150}
+-------------------------------------------
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(flexdashboard)
+
+budget <- budget[-nrow(budget),]
+
+bud_transfers <- budget %>% filter(category == "transfer") %>% summarise(total= sum(total)) %>% prettyNum(big.mark = ",")
+
+bud_activity <- budget %>% filter(category == "activity") %>% summarise(total= sum(total))%>% prettyNum(big.mark = ",")
+
+bud_hotel <- budget %>% filter(category == "hotel") %>% summarise(total = sum(total))%>% prettyNum(big.mark = ",")
+
+bud_restaurant <- budget %>% filter(category == "restaurant") %>%  summarise(total = sum(total)) %>% prettyNum(big.mark = ",")
+
+bud_audiovisuals <- budget %>% filter(category == "audiovisuals") %>%  summarise(total = sum(total)) %>% prettyNum(big.mark = ",")
+
+```
+
+<br>
+
+### hotel
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+valueBox(bud_hotel, 
+         icon = "fa-h-square", 
+         caption = "Euros in Hotel",
+         color = "#fcffc2")
+```
+
+
+### activities
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+valueBox(bud_activity, 
+         icon = "fa-walking", 
+         caption = "Euros in activities",
+         color = "#b6fcd5")
+```
+
+
+### transfers
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+valueBox(bud_transfers, icon = "fa-shuttle-van",
+         caption = "Euros in transfers",
+         color = "#c6e2ff")
+
+```
+
+### restaurants
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+valueBox(bud_restaurant, 
+         icon = "fa-utensils", 
+         caption = "Euros in offsite restaurants",
+         color = "#fdc9d9")
+```
+
+
+### Audiovisuals
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+valueBox(bud_audiovisuals, 
+         icon = "fa-fast-forward", 
+         caption = "Euros in Audiovisuals",
+         color = "#b6a3ea")
+```
+
+
+Proforma {data-navmenu="financials"}
+===================================== 
+
+
+_**Coca-cola group**_ {data-width=850}
+-------------------------------------------
+
+### Budget as of May 25, 2019
+
+<br>
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+library(DT)
+library(readxl)
+library(lubridate)
+library(dplyr)
+library(chron)
+library(kableExtra)
+library(scales)
+library(tidyverse)
+
+proforma <- read_excel("rooming.xlsx", sheet = "prof") 
+proforma <- sapply(proforma, as.character)
+proforma[is.na(proforma)] <- ""
+proforma <- data.frame(proforma, stringsAsFactors = FALSE)
+class(proforma$prof_units) <- "numeric"
+class(proforma$prof_cost) <- "numeric"
+class(proforma$prof_total) <- "numeric"
+names(proforma) <- c("date","description","units","unit cost","total","category")
+
+
+proforma[nrow(proforma),] <- c("","","<strong>Total</strong>","",sum(proforma$total),"")
+
+class(proforma$total) <- "numeric"
+
+tables(proforma)
+
+
+```
+
+_**Coca-cola group**_ {data-width=150}
+-------------------------------------------
+
+<br><br>
+
+
+### total proforma
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+library(dplyr)
+library(flexdashboard)
+
+dip <- read_excel("rooming.xlsx", sheet = "dip") 
+dip$amount <- as.numeric(dip$amount)
+dip_sum <- dip %>% group_by(paid) %>% summarise(sum = sum(amount)) 
+
+total <- sum(dip_sum$sum)
+
+total %>% prettyNum(big.mark = ",") %>% 
+valueBox(
+         icon = "fa-euro-sign", 
+         caption = "Total requested",
+         color = "#ffa500")
+```
+
+
+### _**Total paid %**_
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+paid_dip <- dip_sum$sum[dip_sum$paid == "yes"] 
+
+gauge(100*paid_dip/total, min = 0, max = 100, symbol = '%', gaugeSectors(colors = "yellow"),label = paste0("Total paid ", paid_dip," "))
+
+```
+
+
+### _**Summary table %**_
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+library(formattable)
+library(readxl)
+
+dip <- read_excel("rooming.xlsx", sheet = "dip")
+dip$paid <- ifelse(dip$paid == "yes",TRUE,FALSE)
+formattable(dip, list(paid = formatter("span",
+      style = x ~ style(color = ifelse(x, "green", "red")),
+      x ~ icontext(ifelse(x, "ok", "remove"), ifelse(x, "Yes", "No")))))
+            
+```
+

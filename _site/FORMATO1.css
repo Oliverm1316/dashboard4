@@ -1,0 +1,51 @@
+
+#TOC { 
+      color: #ee7600;
+      border-color: black;
+      font-size: 12px;
+      font-family: "helvetica", sans-serif;
+}
+
+
+body {
+      font-size: 14px;
+      font-family: "helvetica", sans-serif;
+  }
+  
+td { 
+  font-size: 14px;
+}
+
+h1 {
+  font-size: 50px;
+  color: #ee7600;
+  font-family: "helvetica", sans-serif;
+}
+
+h2 { 
+    font-size: 28px;
+    color: #ee7600;
+    font-family: "helvetica", sans-serif;
+}
+
+h3 { 
+  font-size: 20px;
+  color: #ee7600;
+  font-family: "helvetica", sans-serif;
+}
+
+
+h4 { 
+  font-size: 14px;
+  color: #ee7600;
+  font-family: "helvetica", sans-serif;
+}
+
+
+h5 { 
+  font-size: 12px;
+  color: #ee7600;
+  font-family: "helvetica", sans-serif;
+}
+
+
