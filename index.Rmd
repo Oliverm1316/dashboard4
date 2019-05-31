@@ -116,13 +116,13 @@ datatable(total_in_out_table,
 ```
 
 
-Rooming List charts 
+Rooming List Chart{data-navmenu="charts"}
 ===================================== 
 
 _**Rooming chart**_ {data-width=334}
 ----------------------------------------
 
-### 1st 
+### 1st - Rooming List chart 
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -152,7 +152,7 @@ ggplotly(rooming_chart(rooming1), tooltip = c("first", "room_type","allergies", 
 _**Rooming chart**_ {data-width=333}
 ----------------------------------------
 
-### 2nd 
+### 2nd - Rooming List chart
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -168,7 +168,7 @@ ggplotly(rooming_chart(rooming2), tooltip = c("first","room_type","allergies","r
 _**Rooming chart**_ {data-width=333}
 ----------------------------------------
 
-### 3rd 
+### 3rd - Rooming List chart
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -180,6 +180,123 @@ rooming3 <- rooming[(rows2+1):rows3,]
 ggplotly(rooming_chart(rooming3), tooltip = c("first","room_type","allergies","remarks"))
  
 ```
+
+Ground Chart{data-navmenu="charts"}
+===================================== 
+
+_**Ground chart**_{.tabset .tabset-fade .tabset-dropdown}
+-------------------------------------------------------------
+
+### Pick ups from 4:30 to 5:00
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+library(vistime)
+library(dplyr)
+library(readxl)
+
+df <- read_excel('rooming.xlsx', sheet = 'trnsfout')
+df <- df %>% filter(vehicle_out != "no transfer")
+
+df$trnsfout_time <- df$trnsfout_time %>% as.POSIXct() %>%
+  strptime("%Y-%m-%d %H:%M:%S",tz="") %>% format(format = "%H:%M")
+
+df$pick_up <- df$pick_up %>% as.POSIXct() %>%
+  strptime("%Y-%m-%d %H:%M:%S",tz="") %>% format(format = "%H:%M")
+
+df$pick_update <- as.POSIXct(
+  paste(df$trnsf_out,df$pick_up),format = "%Y-%m-%d %H:%M", tz = "")
+
+df$trnsfout_date <- as.POSIXct(
+  paste(df$trnsf_out,df$trnsfout_time),format = "%Y-%m-%d %H:%M", tz = "")
+
+df$full_name <- paste(df$last, df$first)
+df$pick_vehicle <- paste(df$pick_up,"-",df$vehicle_out)
+
+pal <- "rgba(124,252,0,0.3)"
+
+df$color <- rep_len(pal,length.out = nrow(df))
+
+a <- paste("take off time:",df$trnsfout_time)
+b <- paste("flight nr:",df$flight_out)
+
+df$flights <- paste(a,b,sep = "\n")
+
+data <- df[,c("full_name","pick_vehicle","pick_update", 
+              "trnsfout_date","color","flights")]
+
+colnames(data) <- c("event","group","start","end","color","tooltip")
+
+
+cutoff <- which(data$start == "2019-05-16 08:00:00 CEST") %>% min()
+
+data1 <- data[1:17,]
+
+p <- function(x){vistime(x, linewidth = 12, background_lines = 0,
+             title = "Pick up and flight times")}
+
+pp <- plotly_build(p(data1))
+
+pp$x$layout$xaxis$tickfont <- list(size = 14)
+for (i in grep("yaxis*", names(pp$x$layout))) pp$x$layout[[i]]$tickfont <- list(size = 10)
+
+for (i in 1:length(pp$x$data)) {
+  if (pp$x$data[[i]]$mode == "text") pp$x$data[[i]]$textfont$size <- 13}
+
+pp
+
+
+```
+
+### Pick ups from 8:00 to 9:45
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+
+data2 <- data[18:54,]
+
+
+ppp <- plotly_build(p(data2))
+
+ppp$x$layout$xaxis$tickfont <- list(size = 14)
+for (i in grep("yaxis*", names(ppp$x$layout))) ppp$x$layout[[i]]$tickfont <- list(size = 10)
+
+for (i in 1:length(ppp$x$data)) {
+  if (ppp$x$data[[i]]$mode == "text") ppp$x$data[[i]]$textfont$size <- 13}
+
+ppp
+
+
+```
+
+### Pick ups at 12:30
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+
+data3 <- data[55:nrow(data),]
+
+
+pppp <- plotly_build(p(data3))
+
+pppp$x$layout$xaxis$tickfont <- list(size = 14)
+for (i in grep("yaxis*", names(pppp$x$layout))) pppp$x$layout[[i]]$tickfont <- list(size = 10)
+
+for (i in 1:length(pppp$x$data)) {
+  if (pppp$x$data[[i]]$mode == "text") pppp$x$data[[i]]$textfont$size <- 13}
+
+pppp
+
+
+```
+
+
+
+
+
 
 
 Budget {data-navmenu="financials"}
